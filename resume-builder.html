@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Builder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background-color: #f7fafd;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      gap: 20px;
+    }
+    .form-section, .preview-section {
+      width: 50%;
+    }
+    .form-section h2, .preview-section h2 {
+      color: #2c7bbf;
+      text-align: center;
+    }
+    .resume-preview {
+      display: flex;
+      height: auto;
+      border: 2px solid #e0f0fc;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .left-panel, .right-panel {
+      padding: 20px;
+    }
+    .left-panel {
+      width: 35%;
+      background: #333;
+      color: white;
+      text-align: center;
+    }
+    .right-panel {
+      width: 65%;
+      background: white;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 15px;
+    }
+    label {
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #155e8a;
+    }
+    input, textarea {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #bcdaf1;
+      font-size: 1em;
+      background-color: white;
+    }
+    textarea {
+      resize: vertical;
+    }
+    .photo-upload input {
+      padding: 10px;
+      font-size: 1em;
+    }
+    .resume-form .btn,
+    button {
+      padding: 12px 24px;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      background-color: #2c7bbf;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      margin-right: 10px;
+    }
+    .btn:hover,
+    button:hover {
+      background-color: #1e5e91;
+      transform: translateY(-2px);
+    }
+    #profile-pic-preview {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      border: 3px solid white;
+    }
+    .hr-line {
+      border: 0;
+      border-top: 1px solid white;
+      margin: 10px 0;
+    }
+    .hr-line-right {
+      border: 0;
+      border-top: 1px solid black;
+      margin: 10px 0;
+    }
+    .contact-info {
+      font-size: 12px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-section">
+      <h2>Resume Details</h2>
+      <div class="form-group">
+        <label for="profile-pic">Profile Picture</label>
+        <input type="file" id="profile-pic" accept="image/*" />
+      </div>
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" />
+      </div>
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input type="text" id="title" />
+      </div>
+      <div class="form-group">
+        <label for="location">Location</label>
+        <input type="text" id="location" />
+      </div>
+      <div class="form-group">
+        <label for="contact">Phone</label>
+        <input type="text" id="contact" />
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" />
+      </div>
+      <div class="form-group">
+        <label for="about">About</label>
+        <textarea id="about"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="links">Links (comma separated)</label>
+        <input type="text" id="links" />
+      </div>
+      <div class="form-group">
+        <label for="reference">Reference</label>
+        <textarea id="reference"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="hobbies">Hobbies (comma separated)</label>
+        <input type="text" id="hobbies" />
+      </div>
+      <div class="form-group">
+        <label for="experience">Work Experience</label>
+        <textarea id="experience"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="education">Education</label>
+        <textarea id="education"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="skills">Skills (comma separated)</label>
+        <input type="text" id="skills" />
+      </div>
+      <div class="form-group">
+        <label for="languages">Languages (comma separated)</label>
+        <input type="text" id="languages" />
+      </div>
+      <button onclick="generateResume()">Generate Resume</button>
+      <button onclick="downloadPDF()">Download PDF</button>
+    </div>
+
+    <div class="preview-section">
+      <h2>Preview</h2>
+      <div id="resume" class="resume-preview">
+        <div class="left-panel">
+          <img id="profile-pic-preview" src="" alt="Profile Picture" style="display:none;" />
+          <h4>About Me</h4>
+          <p id="prev-about"></p>
+          <hr class="hr-line">
+          <h4>Links</h4>
+          <ul id="prev-links"></ul>
+          <hr class="hr-line">
+          <h4>Reference</h4>
+          <p id="prev-reference"></p>
+          <hr class="hr-line">
+          <h4>Hobbies</h4>
+          <ul id="prev-hobbies"></ul>
+        </div>
+        <div class="right-panel">
+          <h1 id="prev-name"></h1>
+          <div class="contact-info">
+            <p id="prev-title"></p>
+            <p id="prev-location"></p>
+            <p id="prev-contact"></p>
+            <p id="prev-email"></p>
+          </div>
+          <hr class="hr-line-right">
+          <h4>Work Experience</h4>
+          <p id="prev-experience"></p>
+          <hr class="hr-line-right">
+          <h4>Education</h4>
+          <p id="prev-education"></p>
+          <hr class="hr-line-right">
+          <h4>Skills</h4>
+          <ul id="prev-skills"></ul>
+          <hr class="hr-line-right">
+          <h4>Languages</h4>
+          <ul id="prev-languages"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("profile-pic").addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const img = document.getElementById("profile-pic-preview");
+          img.src = event.target.result;
+          img.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function generateResume() {
+      document.getElementById("prev-name").textContent = document.getElementById("name").value;
+      document.getElementById("prev-title").textContent = document.getElementById("title").value;
+      document.getElementById("prev-location").textContent = document.getElementById("location").value;
+      document.getElementById("prev-contact").textContent = document.getElementById("contact").value;
+      document.getElementById("prev-email").textContent = document.getElementById("email").value;
+      document.getElementById("prev-about").textContent = document.getElementById("about").value;
+      document.getElementById("prev-reference").textContent = document.getElementById("reference").value;
+
+      const links = document.getElementById("links").value.split(",");
+      const linkList = document.getElementById("prev-links");
+      linkList.innerHTML = "";
+      links.forEach(link => {
+        const li = document.createElement("li");
+        li.textContent = link.trim();
+        linkList.appendChild(li);
+      });
+
+      const skills = document.getElementById("skills").value.split(",");
+      const skillsList = document.getElementById("prev-skills");
+      skillsList.innerHTML = "";
+      skills.forEach(skill => {
+        const li = document.createElement("li");
+        li.textContent = skill.trim();
+        skillsList.appendChild(li);
+      });
+
+      const languages = document.getElementById("languages").value.split(",");
+      const langList = document.getElementById("prev-languages");
+      langList.innerHTML = "";
+      languages.forEach(lang => {
+        const li = document.createElement("li");
+        li.textContent = lang.trim();
+        langList.appendChild(li);
+      });
+
+      const hobbies = document.getElementById("hobbies").value.split(",");
+      const hobbyList = document.getElementById("prev-hobbies");
+      hobbyList.innerHTML = "";
+      hobbies.forEach(hobby => {
+        const li = document.createElement("li");
+        li.textContent = hobby.trim();
+        hobbyList.appendChild(li);
+      });
+
+      document.getElementById("prev-experience").textContent = document.getElementById("experience").value;
+      document.getElementById("prev-education").textContent = document.getElementById("education").value;
+    }
+
+    async function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const resume = document.getElementById("resume");
+      await html2canvas(resume, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const imgProps = doc.getImageProperties(imgData);
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        doc.save("resume.pdf");
+      });
+    }
+  </script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</body>
+</html>
